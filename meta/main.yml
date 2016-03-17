@@ -1,0 +1,18 @@
+---
+
+galaxy_info:
+  author: Alexandre Chaussier
+  description: Install Vagrant
+  company: Infopen (http://www.infopen.pro)
+  license: MIT
+  min_ansible_version: 2.0
+  github_branch: master
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+  galaxy_tags:
+    - system
+    - development
+dependencies: []
+
