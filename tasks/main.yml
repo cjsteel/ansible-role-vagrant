@@ -2,3 +2,55 @@
 
 # Main tasks file for vagrant role
 
+- name: Load OS variables
+  include_vars: "{{ role_path }}/vars/{{ ansible_os_family | lower }}.yml"
+  tags:
+    - nginx
+    - install
+
+- name: Get packages checksums
+  uri:
+    url: "{{ vagrant_url_checksum }}"
+    return_content: True
+  changed_when: False
+  register: vagrant_packages_checksums
+
+- name: Extract package checksum
+  command: "echo {{ (item.split(' '))[0] }}"
+  register: vagrant_package_checksum
+  changed_when: False
+  with_items: "{{ vagrant_packages_checksums.content.split('\n') }}"
+  when: vagrant_package_filename in item
+
+- name: Download Vagrant package
+  get_url:
+    url: "{{ vagrant_url_download ~ '/' ~ vagrant_package_filename }}"
+    dest: '/tmp/'
+    #sha256sum: "{{ ((vagrant_package_checksum.results[0]) | split('\n'))[0] }}"
+    checksum: "sha256:{{ item.stdout }}"
+  changed_when: False
+  with_items: vagrant_package_checksum.results
+  when: item.stdout is defined
+
+- name: Manage OS specific installation tasks
+  include: "{{ role_path }}/tasks/install_{{ ansible_os_family | lower }}.yml"
+  tags:
+    - vagrant
+    - install
+
+- name: Delete package file
+  file:
+    dest: "/tmp/{{ vagrant_package_filename }}"
+    state: 'absent'
+  changed_when: False
+
+- name: Install Vagrant plugins
+  command: "vagrant plugin install {{ item.name }}"
+  with_items: "{{ vagrant_plugins }}"
+  when: "{{ item.state == 'present' }}"
+
+- name: Uninstall Vagrant plugins
+  command: "vagrant plugin uninstall {{ item.name }}"
+  with_items: "{{ vagrant_plugins }}"
+  when: "{{ item.state == 'absent' }}"
+

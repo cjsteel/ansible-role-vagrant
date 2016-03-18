@@ -1,0 +1,7 @@
+---
+
+# Ubuntu specific vars
+vagrant_package_extension: 'deb'
+vagrant_package_filename: "{{ 'vagrant_' ~ vagrant_package_version
+  ~ '_' ~ ansible_architecture ~ '.' ~ vagrant_package_extension }}"
+
