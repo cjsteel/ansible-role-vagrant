@@ -5,7 +5,7 @@
 - name: Load OS variables
   include_vars: "{{ role_path }}/vars/{{ ansible_os_family | lower }}.yml"
   tags:
-    - nginx
+    - vagrant
     - install
 
 - name: Get packages checksums
@@ -14,6 +14,9 @@
     return_content: True
   changed_when: False
   register: vagrant_packages_checksums
+  tags:
+    - vagrant
+    - install
 
 - name: Extract package checksum
   command: "echo {{ (item.split(' '))[0] }}"
@@ -21,19 +24,38 @@
   changed_when: False
   with_items: "{{ vagrant_packages_checksums.content.split('\n') }}"
   when: vagrant_package_filename in item
+  tags:
+    - vagrant
+    - install
+
+- name: Get vagrant version if installed
+  command: 'vagrant --version'
+  register: vagrant_installed_version
+  changed_when: False
+  ignore_errors: True
+  tags:
+    - vagrant
+    - install
 
 - name: Download Vagrant package
   get_url:
     url: "{{ vagrant_url_download ~ '/' ~ vagrant_package_filename }}"
     dest: '/tmp/'
-    #sha256sum: "{{ ((vagrant_package_checksum.results[0]) | split('\n'))[0] }}"
     checksum: "sha256:{{ item.stdout }}"
-  changed_when: False
-  with_items: vagrant_package_checksum.results
-  when: item.stdout is defined
+  register: vagrant_download_package
+  with_items: "{{ vagrant_package_checksum.results }}"
+  when:
+    - "{{ (vagrant_installed_version | failed)
+          or (vagrant_installed_version.stdout.split(' ')[1]
+              != vagrant_package_version) }}"
+    - "{{ item.stdout is defined }}"
+  tags:
+    - vagrant
+    - install
 
 - name: Manage OS specific installation tasks
   include: "{{ role_path }}/tasks/install_{{ ansible_os_family | lower }}.yml"
+  when: "{{ vagrant_download_package | changed }}"
   tags:
     - vagrant
     - install
@@ -42,15 +64,35 @@
   file:
     dest: "/tmp/{{ vagrant_package_filename }}"
     state: 'absent'
+  tags:
+    - vagrant
+    - install
+
+- name: List installed Vagrant plugins
+  command: "vagrant plugin list"
   changed_when: False
+  register: vagrant_initial_plugins_list
+  tags:
+    - vagrant
+    - install
 
 - name: Install Vagrant plugins
   command: "vagrant plugin install {{ item.name }}"
   with_items: "{{ vagrant_plugins }}"
-  when: "{{ item.state == 'present' }}"
+  when:
+    - "{{ item.state == 'present' }}"
+    - "{{ item.name not in vagrant_initial_plugins_list.stdout }}"
+  tags:
+    - vagrant
+    - install
 
 - name: Uninstall Vagrant plugins
   command: "vagrant plugin uninstall {{ item.name }}"
   with_items: "{{ vagrant_plugins }}"
-  when: "{{ item.state == 'absent' }}"
+  when:
+    - "{{ item.state == 'absent' }}"
+    - "{{ item.name in vagrant_initial_plugins_list.stdout }}"
+  tags:
+    - vagrant
+    - install
 
