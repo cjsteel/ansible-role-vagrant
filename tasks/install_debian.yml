@@ -1,0 +1,10 @@
+---
+
+# Specific install tasks for Debian family
+
+- name: Install Vagrant package
+  become: True
+  apt:
+    deb: "/tmp/{{ vagrant_package_filename }}"
+    state: "{{ vagrant_package_state }}"
+
