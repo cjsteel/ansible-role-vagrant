@@ -28,8 +28,8 @@ describe 'vagrant Ansible role' do
 
     describe command('vagrant plugin list') do
         its(:stdout) {
-            should match /vagrant-serverspec/
-            should match /vagrant-triggers/
+            should match /.*vagrant-serverspec.*/m
+            should match /.*vagrant-triggers.*/m
         }
     end
 end
