@@ -26,13 +26,11 @@ describe 'vagrant Ansible role' do
         it { should be_mode 755 }
     end
 
-    if not ENV['TRAVIS']
-        describe command('vagrant plugin list') do
-            its(:stdout) {
-                should match /.*vagrant-serverspec.*/m
-                should match /.*vagrant-triggers.*/m
-            }
-        end
+    describe command('vagrant plugin list') do
+        its(:stdout) {
+            should match /.*vagrant-serverspec.*/m
+            should match /.*vagrant-triggers.*/m
+        }
     end
 end
 
