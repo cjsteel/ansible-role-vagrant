@@ -36,6 +36,25 @@ This role contains two tests methods :
 
 ### Default role variables
 
+    # Package informations
+    vagrant_package_version: '1.8.1'
+    vagrant_package_state: 'present'
+    vagrant_package_filename: "{{ 'vagrant_' ~ vagrant_package_version
+       ~ '.' ~ vagrant_package_extension }}"
+
+    # URLs informations
+    vagrant_url_download: "{{ 'https://releases.hashicorp.com/vagrant/'
+      ~ vagrant_package_version }}"
+    vagrant_url_checksum: "{{ vagrant_url_download ~ '/vagrant_'
+      ~ vagrant_package_version ~ '_SHA256SUMS' }}"
+
+    # Plugins
+    vagrant_plugins:
+      - name: 'vagrant-serverspec'
+        state: 'present'
+      - name: 'vagrant-triggers'
+        state: 'present'
+
 ## Dependencies
 
 None
