@@ -49,6 +49,7 @@ This role contains two tests methods :
       ~ vagrant_package_version ~ '_SHA256SUMS' }}"
 
     # Plugins
+    vagrant_plugins_user: ""
     vagrant_plugins:
       - name: 'vagrant-serverspec'
         state: 'present'

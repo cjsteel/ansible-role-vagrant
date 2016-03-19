@@ -15,6 +15,7 @@ vagrant_url_checksum: "{{ vagrant_url_download ~ '/vagrant_'
   ~ vagrant_package_version ~ '_SHA256SUMS' }}"
 
 # Plugins
+vagrant_plugins_user: ""
 vagrant_plugins:
   - name: 'vagrant-serverspec'
     state: 'present'

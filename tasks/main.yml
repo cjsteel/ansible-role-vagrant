@@ -69,17 +69,23 @@
     - install
 
 - name: List installed Vagrant plugins
+  become: True
+  become_user: "{{ vagrant_plugins_user }}"
   command: "vagrant plugin list"
   changed_when: False
   register: vagrant_initial_plugins_list
+  when: "{{ vagrant_plugins_user != '' }}"
   tags:
     - vagrant
     - install
 
 - name: Install Vagrant plugins
+  become: True
+  become_user: "{{ vagrant_plugins_user }}"
   command: "vagrant plugin install {{ item.name }}"
   with_items: "{{ vagrant_plugins }}"
   when:
+    - "{{ vagrant_plugins_user != '' }}"
     - "{{ item.state == 'present' }}"
     - "{{ item.name not in vagrant_initial_plugins_list.stdout }}"
   tags:
@@ -87,9 +93,12 @@
     - install
 
 - name: Uninstall Vagrant plugins
+  become: True
+  become_user: "{{ vagrant_plugins_user }}"
   command: "vagrant plugin uninstall {{ item.name }}"
   with_items: "{{ vagrant_plugins }}"
   when:
+    - "{{ vagrant_plugins_user != '' }}"
     - "{{ item.state == 'absent' }}"
     - "{{ item.name in vagrant_initial_plugins_list.stdout }}"
   tags:
