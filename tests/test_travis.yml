@@ -10,4 +10,5 @@
     - include: ./test_common.yml
   vars:
     role_name: "{{ lookup('env','TRAVIS_REPO_SLUG') }}"
+    vagrant_plugins_user: "{{ lookup('env','USER') }}"
 
