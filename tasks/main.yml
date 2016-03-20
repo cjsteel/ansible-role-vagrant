@@ -70,7 +70,7 @@
 
 - name: List installed Vagrant plugins
   become: True
-  command: "su -c 'vagrant plugin list' {{ vagrant_plugins_user }}"
+  shell: "su - {{ vagrant_plugins_user }} -c 'vagrant plugin list'"
   changed_when: False
   register: vagrant_initial_plugins_list
   when: "{{ vagrant_plugins_user != '' }}"
@@ -80,7 +80,7 @@
 
 - name: Install Vagrant plugins
   become: True
-  command: "su -c 'vagrant plugin install {{ item.name }}' {{ vagrant_plugins_user }}"
+  shell: "su - {{ vagrant_plugins_user }} -c 'vagrant plugin install {{ item.name }}'"
   with_items: "{{ vagrant_plugins }}"
   when:
     - "{{ vagrant_plugins_user != '' }}"
@@ -92,7 +92,7 @@
 
 - name: Uninstall Vagrant plugins
   become: True
-  command: "su -c 'vagrant plugin uninstall {{ item.name }}' {{ vagrant_plugins_user }}"
+  shell: "su - {{ vagrant_plugins_user }} -c 'vagrant plugin uninstall {{ item.name }}'"
   with_items: "{{ vagrant_plugins }}"
   when:
     - "{{ vagrant_plugins_user != '' }}"
