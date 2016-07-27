@@ -25,7 +25,7 @@ before_install:
   # Install Ansible and pytest.
   - >
     sudo pip install ansible paramiko PyYAML Jinja2 httplib2 six pytest
-    ansible-lint
+    ansible-lint==3.2.1
 
   # Remove rvmsudo warning
   - >

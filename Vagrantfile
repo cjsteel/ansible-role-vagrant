@@ -35,7 +35,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                             && sudo apt-get install python-pip curl git -y \
                             && sudo pip install paramiko PyYAML Jinja2 \
                                                 httplib2 six pytest \
-                                                ansible-lint \
+                                                ansible-lint==3.2.1 \
                             && cd /usr/local/src \
                             && sudo git clone #{ANSIBLE_GIT_REPOSITORY} \
                             && cd ansible \
@@ -49,7 +49,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                             && sudo apt-get install python-pip curl git -y \
                             && sudo pip install paramiko PyYAML Jinja2 \
                                                 httplib2 six pytest ansible \
-                                                ansible-lint)"
+                                                ansible-lint==3.2.1)"
         end
       end
 
