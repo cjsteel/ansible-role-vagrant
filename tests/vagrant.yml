@@ -1,0 +1,273 @@
+--- # roles/resources/tests/vagrant.yml
+
+- hosts: all
+  become: true
+  gather_facts: false
+  pre_tasks:
+
+
+    - set_fact: fact_controller_user="{{ lookup('env','USER') }}"
+    - debug: var=fact_controller_user
+
+    - set_fact: fact_controller_home="{{ lookup('env','HOME') }}"
+    - debug: var=fact_controller_home
+
+    - set_fact: fact_role_path="{{ lookup('pipe','pwd')|dirname }}"
+    - debug: var=fact_role_path
+
+    - name: "Ensure that our target has python2.x for Ansible gather facts as some Ubuntu 16.04 vagrant boxes do not)"
+      become_user: root
+      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      register: output
+      changed_when:
+       - output.stdout != ""
+       - output.stdout != "\r\n"
+      ignore_errors: yes
+
+    - name: "Now that we are sure Python 2.7 is installed we can gather our facts"
+      setup:
+
+  vars:
+
+# project_vars usually from group_vars/all/defaults.yml repeated here as not inlcuded in tests
+
+## controller user vars
+
+    - project_controller_user                : '{{ fact_controller_user }}'
+    - project_controller_home                : '{{ fact_controller_home }}'
+    - project_controller_resources_home      : '{{ project_controller_home }}'
+    - project_controller_resources_role_path : '{{ project_controller_home }}/projects/ace/roles/'
+
+## deployment user vars
+
+    - project_deployment_user           : 'ubuntu'
+    - project_deployment_home           : '/home/{{ project_deployment_user }}'
+    - project_deployment_resources_home : '{{ project_deployment_home }}'
+
+# standard vars start here ####################################################
+
+    - resources_debug : 'true'
+
+    - resources_controller_user           : '{{ project_controller_user }}'
+    - resources_controller_home           : '{{ project_controller_home }}'
+    - resources_controller_resources_home : '{{ project_controller_resources_home }}'
+
+    - resources_deployment_user           : '{{ project_deployment_user }}'
+    - resources_deployment_home           : '{{ project_deployment_home }}'
+    - resources_deployment_resources_home : '{{ project_deployment_resources_home }}'
+
+## atomic versioning example
+#
+#    - resources_major             : '0'
+#    - resources_moderate_revision : '0'
+#    - resources_minor_revision    : '1'
+#    - resources_build             : ''
+
+## Package
+
+    - resources_package_state   : 'present'
+    - resources_package_version : '2.0.1'
+    - resources_package_name    : "vagrant_{{ resources_package_version }}_i686.deb"
+
+## Directories
+
+    - resources_controller_resources_root : '{{ resources_controller_home }}/local_tests/src/sw'
+    - resources_deployment_resources_root : '{{ resources_deployment_home }}/remote_tests/src/sw'
+
+## Clones
+
+## URL Downloads
+
+## Copies
+
+## Touches
+
+## Templates
+
+## Blockinfile
+
+## Symlinks (Standard)
+
+## Symlinks (Relative
+
+#    - resources_on_local: []
+
+    - resources_on_local:
+
+        resources_local_directory_creation_example:
+
+          state   : 'directory'
+          path    : '{{ resources_controller_resources_root }}'
+          owner   : '{{ resources_controller_user }}'
+          group   : '{{ resources_controller_user }}'
+          mode    : '0755'
+
+        resources_local_clone_example:
+
+          clone : yes
+          repo  : 'https://github.com/csteel/myrepos.git'
+          dest  : '{{ resources_controller_resources_root }}/myrepos'
+          update: yes
+
+        resources_local_url_download_example:
+
+          resource_type : 'url'
+          url           : 'https://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh'
+          dest          : '{{ resources_controller_resources_root }}/Miniconda2-latest-Linux-x86_64.sh'
+          owner         : '{{ resources_controller_user }}'
+          group         : '{{ resources_controller_user }}'
+          mode          : '0700'
+          checksum      : 'md5:bd1655b4b313f7b2a1f2e15b7b925d03'
+
+        resources_local_file_copy_example:
+
+          state : 'copy'
+          src   : '{{ fact_role_path }}/files/{{ ansible_distribution | lower }}/{{ ansible_distribution_version }}/etc/skel/.mrconfig'
+          dest  : '{{ resources_controller_resources_root }}/.mrconfig'
+          owner : '{{ resources_controller_user }}'
+          group : '{{ resources_controller_user }}'
+          mode  : '0700'
+
+        resources_local_file_touch_example:
+
+          state : 'touch' 
+          path  : '{{ resources_controller_resources_root }}/copy_test.yml'
+          owner : '{{ resources_controller_user }}'
+          group : '{{ resources_controller_user }}'
+          mode  : '0770'
+
+        resources_create_local_file_from_template_example:
+
+          state: 'template'
+          src  : './templates/template_test.md.j2'
+          dest : '{{ resources_controller_resources_root }}/test.md'
+          owner: '{{ resources_controller_user }}'
+          group: '{{ resources_controller_user }}'
+          mode : '0700'
+
+        resources_create_local_blocksinfile_example:
+
+          type  : 'blockinfile'
+          path  : '{{ resources_controller_resources_root }}/.mrconfig'
+          owner : '{{ resources_controller_user }}'
+          group : '{{ resources_controller_user }}'
+          mode  : '0700'
+          marker: '## {mark} ANSIBLE MANAGED BLOCK .mrconfig entry for myrepos example'
+          insertafter: "EOF"
+          block: |
+             [bin/acemenu]
+             checkout = git clone 'https://github.com/cjsteel/ansible-role-acemenu.git' 'acemenu'
+          state: 'present'
+
+        resources_create_local_standard_sym_link_example:
+
+          state : 'link'
+          src   : '{{ resources_controller_resources_root }}/test.md'
+          dest  : '{{ resources_controller_resources_root }}/my_remote_link'
+          owner : '{{ resources_controller_user }}'
+          group : '{{ resources_controller_user }}'
+          mode : '0700'
+          force: '{{ resources_default_link_force }}'
+
+        resources_create_local_relative_sym_link_example:
+
+          state       : 'relative_link'
+          link_name   : 'mr'
+          link_target : 'myrepos/mr'
+          link_dir    : '{{ resources_controller_resources_root }}'
+          owner       : '{{ resources_controller_user }}'
+          group       : '{{ resources_controller_user }}'
+          mode        : '0700'
+
+#    - resources_on_remote: []
+
+    - resources_on_remote:
+
+        resources_remote_directory_creation_example:
+
+          state   : 'directory'
+          path    : '{{ resources_deployment_resources_root }}'
+          owner   : '{{ resources_deployment_user }}'
+          group   : '{{ resources_deployment_user }}'
+          mode    : '0755'
+
+        resources_remote_clone_example:
+
+          clone : yes
+          become: true
+          repo  : 'https://github.com/csteel/myrepos.git'
+          dest  : '{{ resources_deployment_resources_root }}/myrepos'
+          update: yes
+
+        resources_remote_url_download_example:
+
+          resource_type : 'url'
+          url           : 'https://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh'
+          dest          : '{{ resources_deployment_resources_root }}/Miniconda2-latest-Linux-x86_64.sh'
+          owner         : '{{ resources_deployment_user }}'
+          group         : '{{ resources_deployment_user }}'
+          mode          : '0700'
+          checksum      : 'md5:bd1655b4b313f7b2a1f2e15b7b925d03'
+
+        resources_remote_file_copy_example:
+
+          state : 'copy'
+          src   : '{{ fact_role_path }}/files/{{ ansible_distribution | lower }}/{{ ansible_distribution_version }}/etc/skel/.mrconfig'
+          dest  : '{{ resources_deployment_resources_root }}/.mrconfig'
+          owner : '{{ resources_deployment_user }}'
+          group : '{{ resources_deployment_user }}'
+          mode  : '0700'
+
+        resources_remote_file_touch_example:
+
+          state : 'touch' 
+          path  : '{{ resources_deployment_resources_root }}/copy_test.yml'
+          owner : '{{ resources_deployment_user }}'
+          group : '{{ resources_deployment_user }}'
+          mode  : '0770'
+
+        resources_create_remote_file_from_template_example:
+
+          state: 'template'
+          src  : './templates/template_test.md.j2'
+          dest : '{{ resources_deployment_resources_root }}/test.md'
+          owner: '{{ resources_deployment_user }}'
+          group: '{{ resources_deployment_user }}'
+          mode : '0700'
+
+        resources_create_remote_blocksinfile_example:
+          type  : 'blockinfile'
+          path  : '{{ resources_deployment_resources_root }}/.mrconfig'
+          owner : '{{ resources_deployment_user }}'
+          group : '{{ resources_deployment_user }}'
+          mode  : '0700'
+          marker: '## {mark} ANSIBLE MANAGED BLOCK .mrconfig entry for myrepos example'
+          insertafter: "EOF"
+          block: |
+             [bin/acemenu]
+             checkout = git clone 'https://github.com/cjsteel/ansible-role-acemenu.git' 'acemenu'
+          state: 'present'
+
+        resources_create_remote_standard_sym_link_example:
+
+          state : 'link'
+          src   : '{{ resources_deployment_resources_root }}/test.md'
+          dest  : '{{ resources_deployment_resources_root }}/my_remote_link'
+          owner : '{{ resources_deployment_user }}'
+          group : '{{ resources_deployment_user }}'
+          mode : '0700'
+          force: '{{ resources_default_link_force }}'
+
+        resources_create_remote_relative_sym_link_example:
+
+          state       : 'relative_link'
+          link_name   : 'mr'
+          link_target : 'myrepos/mr'
+          link_dir    : '{{ resources_deployment_resources_root }}'
+          owner       : '{{ resources_deployment_user }}'
+          group       : '{{ resources_deployment_user }}'
+          mode        : '0700'
+
+  roles:
+
+    - ../../
