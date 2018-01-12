@@ -3,7 +3,7 @@
 # Defaults vars file for vagrant role
 
 # Package informations
-vagrant_package_version: '1.8.5'
+vagrant_package_version: '2.0.1'
 vagrant_package_state: 'present'
 vagrant_package_filename: "{{ 'vagrant_' ~ vagrant_package_version
   ~ '.' ~ vagrant_package_extension }}"
